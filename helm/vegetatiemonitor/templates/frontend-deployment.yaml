@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.prefix }}-{{ .Values.frontend.name }}
+  labels:
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+  annotations:
+    checksum/config: {{ include (print $.Template.BasePath "/frontend-configmap.yaml") . | sha256sum }}
+spec:
+{{- if not .Values.frontend.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+{{- end }}
+  selector:
+    matchLabels:
+      app: {{ .Values.prefix }}-{{ .Values.frontend.name }}
+  template:
+    metadata:
+    {{- with .Values.frontend.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        app: {{ .Values.prefix }}-{{ .Values.frontend.name }}
+    spec:
+      volumes:
+        - name: config
+          configMap:
+            name: {{ .Values.prefix }}-{{ .Values.frontend.name }}-configmap
+      containers:
+        - name: {{ .Values.frontend.name }}
+          image: "{{ .Values.images.frontend.repository }}:{{ .Values.images.frontend.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.images.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.frontend.service.port }}
+          volumeMounts:
+            - name: config
+              mountPath: /usr/share/nginx/html/config/webconfig.json
+              subPath: frontend_config.json
+          resources:
+            {{- toYaml .Values.frontend.resources | nindent 12 }}
+          env:
+            {{- range .Values.frontend.environment_variables }}
+            - name: {{ .key }}
+              value: {{ .value }}
+            {{- end }}
+      imagePullSecrets:
+        - name: {{ .Values.images.imagePullSecrets }}
