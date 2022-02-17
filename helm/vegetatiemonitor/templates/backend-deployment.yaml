@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.prefix }}-{{ .Values.backend.name }}
+  labels:
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+spec:
+{{- if not .Values.backend.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+{{- end }}
+{{- if not .Values.RWS}}
+  strategy:
+   type: Recreate
+{{- end}}
+  selector:
+    matchLabels:
+      app: {{ .Values.prefix }}-{{ .Values.backend.name }}
+  template:
+    metadata:
+    {{- with .Values.backend.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        app: {{ .Values.prefix }}-{{ .Values.backend.name }}
+    spec:
+      volumes:
+        - name: config
+          configMap:
+            defaultMode: 0700
+            name: {{ .Values.prefix }}-{{ .Values.backend.name }}-init-configmap
+        - name: google-cred
+          secret:
+            secretName: {{ .Values.prefix }}-google-secret        
+        - name: backend-volume
+        {{- if .Values.RWS }}
+          nfs:
+            server: {{ .Values.nfs.server }}
+            path: {{ .Values.nfs.path }}
+        {{- else }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.prefix }}-{{ default "pvc-backend" .Values.backend.volumeName }}
+        {{- end }}
+      containers:
+        - name: {{ .Values.backend.name }}
+          image: "{{ .Values.images.backend.repository }}:{{ .Values.images.backend.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.images.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.backend.service.port }}
+          volumeMounts:
+            - name: backend-volume
+              mountPath: /data
+              subPath: geoserver/data
+          resources:
+            {{- toYaml .Values.backend.resources | nindent 12 }}
+          env:
+            {{- range .Values.backend.environment_variables }}
+            - name: {{ .key }}
+              value: {{ .value }}
+            {{- end }}
+      {{- if not .Values.RWS}}
+      {{- end }}

@@ -34,6 +34,8 @@ Installing this chart will give you the following installation in the kubernetes
  - Frontend deployment
  - Frontend service
  - Frontend configmap
+ - Backend deployment
+ - Backend service
  - ingress
 
 Check pods:

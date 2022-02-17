@@ -5,22 +5,47 @@
 replicaCount: 1
 
 RWS: true
-prefix: test
-
-credentials:
-  google:
-    project_id:
-    private_key_id:
-    private_key:
-    client_email:
-    client_id:
+prefix: prod
 
 images:
   frontend:
     repository: deltares/vegetatiemonitor-static
     tag: "latest"
+  backend:
+    repository: deltares/vegetatiemonitor-service
+    tag: "latest"
   imagePullSecrets: []
   imagePullPolicy: Always
+
+backend:
+  name: "vegetatiemonitor-backend"
+  podAnnotations: {}
+
+  volumeName: "backend-pvc-test"
+
+  service:
+    type: NodePort
+    port: 80
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+    # targetMemoryUtilizationPercentage: 80
+  environment_variables:
+    - key: DB_NAME
+      value: ""
+    - key: DB_PORT
+      value: 
+    - key: DB_USER
+      value: ""
+    - key: DB_PASS
+      value: ""
+    - key: DB_HOST
+      value: ""
+
+  resources: {}
 
 frontend:
   name: "vegetatiemonitor-frontend"
@@ -36,7 +61,9 @@ frontend:
     maxReplicas: 100
     targetCPUUtilizationPercentage: 80
 
-  environment_variables: []
+  environment_variables:
+    - key: WEBSERVICE_URL
+      value: ""
 
   resources: {}
 
@@ -44,11 +71,12 @@ ingress:
   environment: google
   host:
   enabled: true
-  # gcloud compute addresses create overstroomik-static-ip --global
-  # gcloud compute addresses list
   annotations:
     kubernetes.io/ingress.global-static-ip-name: "vegetatiemonitor-static-ip"
   services:
     - name: vegetatiemonitor-frontend
       path: /*
       port: 80
+    - name: vegetatiemonitor-backend
+      path: /app/*
+      port: 5000

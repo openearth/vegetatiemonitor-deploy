@@ -1,0 +1,12 @@
+{{- if eq .Values.RWS false}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.prefix }}-{{ default "pvc-backend" .Values.backend.volumeName }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+{{- end }}
