@@ -14,7 +14,7 @@ images:
   backend:
     repository: deltares/vegetatiemonitor-service
     tag: "latest"
-  imagePullSecrets: []
+  imagePullSecrets: "regcred"
   imagePullPolicy: Always
 
 backend:
@@ -25,11 +25,11 @@ backend:
 
   service:
     type: NodePort
-    port: 80
+    port: 5000
 
   autoscaling:
     enabled: false
-    minReplicas: 1
+    minReplicas: 3
     maxReplicas: 10
     targetCPUUtilizationPercentage: 80
     # targetMemoryUtilizationPercentage: 80
@@ -37,15 +37,13 @@ backend:
     - key: DB_NAME
       value: ""
     - key: DB_PORT
-      value: 
+      value: ""
     - key: DB_USER
       value: ""
     - key: DB_PASS
       value: ""
     - key: DB_HOST
       value: ""
-
-  resources: {}
 
 frontend:
   name: "vegetatiemonitor-frontend"
@@ -57,7 +55,7 @@ frontend:
 
   autoscaling:
     enabled: false
-    minReplicas: 1
+    minReplicas: 3
     maxReplicas: 100
     targetCPUUtilizationPercentage: 80
 
@@ -65,11 +63,9 @@ frontend:
     - key: WEBSERVICE_URL
       value: ""
 
-  resources: {}
-
 ingress:
-  environment: google
-  host:
+  environment: rws
+  host: ""
   enabled: true
   annotations:
     kubernetes.io/ingress.global-static-ip-name: "vegetatiemonitor-static-ip"
@@ -80,3 +76,7 @@ ingress:
     - name: vegetatiemonitor-backend
       path: /app/*
       port: 5000
+
+cronjob:
+  name: cronjob-vegetatiemonitor
+  schedule: "59 23 * * *"

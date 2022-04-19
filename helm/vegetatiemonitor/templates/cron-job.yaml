@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Values.prefix }}-{{ .Values.cronjob.name }}
+  labels:
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+spec:
+  schedule: {{ .Values.cronjob.schedule }}
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: curlimage
+            image: curlimages/curl
+            imagePullPolicy: IfNotPresent
+            command:
+            - sh
+            - -c
+            args:
+            - curl $SERVICE_URL
+            env:
+            - name: SERVICE_URL
+              value: {{ .Values.ingress.host }}:{{ .Values.backend.service.port }}/update_cloudfree_tile_images"
+          restartPolicy: OnFailure
