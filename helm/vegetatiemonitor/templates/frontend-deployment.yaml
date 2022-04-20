@@ -23,7 +23,7 @@ spec:
         app: {{ .Values.prefix }}-{{ .Values.frontend.name }}
     spec:
       volumes:
-        - name: config
+        - name: config-volume
           configMap:
             name: {{ .Values.prefix }}-{{ .Values.frontend.name }}-configmap
       containers:
@@ -32,6 +32,10 @@ spec:
           imagePullPolicy: {{ .Values.images.imagePullPolicy }}
           ports:
             - containerPort: {{ .Values.frontend.service.port }}
+          volumeMounts:
+            - name: config-volume
+              mountPath: /usr/share/nginx/html/config.js
+              subPath: config.js
           env:
             {{- range .Values.frontend.environment_variables }}
             - name: {{ .key }}

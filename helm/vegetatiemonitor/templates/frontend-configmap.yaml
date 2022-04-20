@@ -3,8 +3,9 @@ kind: ConfigMap
 metadata:
   name: {{ .Values.prefix }}-{{ .Values.frontend.name }}-configmap
 data:
-  frontend_config.json: |-
-    {
-      "_comment0": "This file will be overwritten automatically by helm values in the deployment process, DO NOT EDIT BY HAND, DO NOT MINIFY",
-      "_comment1": "url's for webservice calls"
-    }
+  config.js: |
+    var config = (() => {
+      return {
+        "SERVER_URL": "http://{{ .Values.ingress.host }}:{{ .Values.backend.service.port }}",
+      };
+    })();

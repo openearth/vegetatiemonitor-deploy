@@ -20,6 +20,10 @@ spec:
       labels:
         app: {{ .Values.prefix }}-{{ .Values.backend.name }}
     spec:
+      volumes:
+        - name: google-cred
+          secret:
+            secretName: {{ .Values.prefix }}-google-secret        
       containers:
         - name: {{ .Values.backend.name }}
           image: "{{ .Values.images.backend.repository }}:{{ .Values.images.backend.tag | default .Chart.AppVersion }}"
@@ -31,5 +35,9 @@ spec:
             - name: {{ .key }}
               value: {{ .value | quote }}
             {{- end }}
+          volumeMounts:
+            - name: google-cred
+              mountPath: /app/privatekey.json
+              subPath: privatekey.json
       imagePullSecrets:
         - name: {{ .Values.images.imagePullSecrets }}
