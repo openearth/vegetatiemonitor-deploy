@@ -21,5 +21,5 @@ spec:
             - curl $SERVICE_URL
             env:
             - name: SERVICE_URL
-              value: {{ .Values.ingress.host }}:{{ .Values.backend.service.port }}/update_cloudfree_tile_images"
+              value: {{ .Values.ingress.host }}:{{ .Values.backend.service.port }}/app/update_cloudfree_tile_images"
           restartPolicy: OnFailure
